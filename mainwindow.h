@@ -1,68 +1,77 @@
-#pragma once 
+#pragma once
 
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#ifdef  _IM_PUBLIC_FUNCTION_
-#  define CPPSQLITE_API  __declspec(dllexport)
-#else
-#  define CPPSQLITE_API  __declspec(dllimport)
-#endif
-
-// Qt
+#include <QApplication>
 #include <QMainWindow>
-#include "ui_mainwindow.h"
+#include <QLineEdit>
+#include <QPushButton>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLabel>
 #include <QFileDialog>
-#include <QDir>
-#include <qstring.h>
-#include <qlineedit.h>
-#include <QpushButton>
-// VTK
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
-#include <vtkImageViewer2.h>
-#include <vtkImageData.h>
-#include <vtkImageActor.h>
-#include <vtkDICOMImageReader.h>
-#include <vtkPNGReader.h>
-#include <vtkJPEGReader.h>
+#include <QSpinBox>
+#include <QFormlayout.h>
+
 #include <QVTKOpenGLNativeWidget.h>
-#include <vtkGenericOpenGLRenderWindow.h>
-#include <vtkSmartPointer.h>
-#include <vtkInteractorStyleImage.h>
-#include <vtkEventQtSlotConnect.h>
-#include "vtkCommand.h"
-#include <vtkOutputWindow.h>
+
+#include <MarchingCube.h>
+#include <OpenDICOMSeries.h>
+#include <VolumeRendering.h>
 #include "vtkAutoInit.h"
-#include <vtkActor.h>
-#include <vtkActor2D.h>
-#include <vtkTextMapper.h>
-#include <vtkTextProperty.h>
-#include <vtkNew.h>
-#include <vtkObjectFactory.h>
-#include<iostream>
-#include<string.h>
+
+#include <vtkOutputWindow.h>
+
+VTK_MODULE_INIT(vtkRenderingOpenGL2);
+VTK_MODULE_INIT(vtkInteractionStyle);
+VTK_MODULE_INIT(vtkRenderingFreeType);
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-   
-public:
-    MainWindow(QWidget* parent = Q_NULLPTR);
 
+public:
+    MainWindow(QMainWindow* parent = nullptr);
+    ~MainWindow();
+
+    void initwindow();
+    
 private:
-    Ui::MainWindow ui;
+    QWidget *centralwidget; 
+    QVTKOpenGLNativeWidget* viewerwidget1;
+    QVTKOpenGLNativeWidget* viewerwidget2;
+    QVTKOpenGLNativeWidget* viewerwidget3;
+    QVTKOpenGLNativeWidget* viewerwidget4;
+    QVBoxLayout *mainlayout;
+    QHBoxLayout *layout1;
+    QGridLayout* layout2;
+    QHBoxLayout* layout3;
+    QHBoxLayout* layout4;
+    QFormLayout* formlayout;
+    QLineEdit *lineedit;
+    QPushButton *openbutton;
+    QPushButton * marchingcubebutton;
+    QPushButton *volumebutton;
+    QLabel *label;
+    QString *OpenFilePath;
+    QSpinBox* spinbox;
+
+    void initslots();
 
 private slots:
-    void Readimage_main(void);
-    int ReadDICOMSeries_main();
+    void opendicomseries();
+    void opendicomseriesYZ();
+    void opendicomseriesXZ();
+
+    void marchingcube();
+
+    void volumerendering();
 
 private:
-    vtkSmartPointer<vtkDICOMImageReader> dicomseriesReader;
-    vtkSmartPointer<vtkImageViewer2> imageViewer;
-    vtkSmartPointer<vtkRenderer> Renderer;
-    vtkSmartPointer<vtkImageData> ImageData;
-    vtkSmartPointer<vtkImageActor> ImageActor;
+    vtkSmartPointer<vtkDICOMImageReader> dicomseriesreader;
+    vtkSmartPointer<vtkImageViewer2> imageviewer; 
+    vtkSmartPointer<vtkImageViewer2> imageviewerYZ;
+    vtkSmartPointer<vtkImageViewer2> imageviewerXZ;
 };
 #endif // MAINWINDOW_H

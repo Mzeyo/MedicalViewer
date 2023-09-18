@@ -1,40 +1,58 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16)
 
-project(Qt_image)
+project(MedicalDemo)
 
-set(CMAKE_AUTOUIC ON)
+find_package(VTK COMPONENTS 
+  CommonColor
+  CommonCore
+  CommonDataModel
+  FiltersCore
+  FiltersModeling
+  IOImage
+  InteractionStyle
+  RenderingContextOpenGL2
+  RenderingCore
+  RenderingFreeType
+  RenderingGL2PSOpenGL2
+  RenderingOpenGL2
+  RenderingVolume
+  RenderingVolumeOpenGL2
+)
+
+find_package(Qt5 COMPONENTS Widgets REQUIRED QUIET)
+
+if (NOT VTK_FOUND)
+  message(FATAL_ERROR "MedicalDemo: Unable to find the VTK build folder.")
+endif()
+
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-set(QT_MODULE_USE_QTXML true)
-
-find_package(Qt5 REQUIRED COMPONENTS Widgets Core Gui)
-
-find_package(VTK REQUIRED)
+# support for out-of-source build
+INCLUDE_DIRECTORIES(
+  ${CMAKE_CURRENT_BINARY_DIR} 
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${VTK_INCLUDE_DIRS}
+)
 
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
         mainwindow.h
-        mainwindow.ui
-        ReadDICOMSeries.h
-        ReadDICOMSeries.cpp
+        MarchingCube.cpp
+        MarchingCube.h
+        OpenDICOMSeries.cpp
+        OpenDICOMSeries.h
+        VolumeRendering.cpp
+        VolumeRendering.h
 )
 
-include_directories(${VTK_INCLUDE_DIRS})
+set(CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files.")
+add_executable(MedicalDemo ${PROJECT_SOURCES})
+target_link_libraries(MedicalDemo ${VTK_LIBRARIES})
 
-add_executable(Qt_image
-            ${PROJECT_SOURCES}
-        )
-
-target_link_libraries(Qt_image Qt5::Widgets Qt5::Gui Qt5::Core)
-
-target_link_libraries(Qt_image ${VTK_LIBRARIES})
+TARGET_LINK_LIBRARIES( MedicalDemo Qt5::Core Qt5::Gui Qt5::Widgets)
 
 vtk_module_autoinit(
-    TARGETS Qt_image
-    MODULES ${VTK_LIBRARYS}
+    TARGETS MedicalDemo
+    MODULES ${VTK_LIBRARIES}
 )

@@ -1,78 +1,79 @@
 #include "mainwindow.h"
 
-MainWindow::MainWindow(QWidget* parent)
+MainWindow::MainWindow(QMainWindow* parent)
     : QMainWindow(parent)
 {
-    ui.setupUi(this);
+    initwindow();
+    initslots();
+} 
 
-    Renderer = vtkSmartPointer<vtkRenderer>::New();
-    ImageData = vtkSmartPointer<vtkImageData>::New();
-    ImageActor = vtkSmartPointer<vtkImageActor>::New();
-
-    // Eliminate version warnings of VTK
-    vtkOutputWindow::SetGlobalWarningDisplay(0);
-
-    // Set the renderWindow for qvtkWidget
-    ui.qvtkWidget->renderWindow()->AddRenderer(Renderer);
-
-    // Connect the signals and slots
-    connect(ui.pushButton, SIGNAL(clicked(bool)), this, SLOT(Readimage_main()));
-    connect(ui.pushButton_2, SIGNAL(clicked(bool)), this, SLOT(ReadDICOMSeries_main()));
+MainWindow::~MainWindow()
+{
 }
 
-// Read images end with .dcm, .png, .jpg, .jpeg
-void MainWindow::Readimage_main(void)
+void MainWindow::initwindow() {
+    // Set the mainwindow
+    this->setObjectName(QString::fromUtf8("MedicalDemo"));
+    this->resize(1600, 1200);
+    centralwidget = new QWidget(this);
+    this->setCentralWidget(centralwidget);
+
+    // Define the PushButton, LineEdit and SpinBox
+    openbutton = new QPushButton("Open DICOM Series");
+    marchingcubebutton = new QPushButton("Marching Cube Operation");
+    volumebutton = new QPushButton("Volume Rendering");
+    lineedit = new QLineEdit();
+
+    label = new QLabel();
+    label->setText("Set the contour value :");
+    label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+    spinbox = new QSpinBox(this);
+    //spinbox->setPrefix("Set the contour value :");
+    spinbox->setRange(0, 1000); // Range
+    spinbox->setSingleStep(50); // Step
+    spinbox->setValue(80); // Origin
+
+    //Layout
+    mainlayout = new QVBoxLayout(centralwidget);
+
+    layout1 = new QHBoxLayout();
+    layout1->addWidget(openbutton);
+    layout1->addWidget(volumebutton);
+    layout1->addWidget(marchingcubebutton);
+    layout1->addWidget(label);
+    layout1->addWidget(spinbox);
+    layout1->setStretch(0, 2);
+    layout1->setStretch(1, 2);
+    layout1->setStretch(2, 2);
+
+    layout2 = new QGridLayout();
+    layout2->addWidget(lineedit);
+
+    layout3 = new QHBoxLayout();
+    viewerwidget1 = new QVTKOpenGLNativeWidget(this);
+    layout3->addWidget(viewerwidget1);
+    viewerwidget2 = new QVTKOpenGLNativeWidget(this);
+    layout3->addWidget(viewerwidget2);
+    
+    layout4 = new QHBoxLayout();
+    viewerwidget3 = new QVTKOpenGLNativeWidget(this);
+    layout4->addWidget(viewerwidget3);
+    viewerwidget4 = new QVTKOpenGLNativeWidget(this);
+    layout4->addWidget(viewerwidget4);
+
+    mainlayout->addLayout(layout1);
+    mainlayout->addLayout(layout2);
+    mainlayout->addLayout(layout3);
+    mainlayout->addLayout(layout4);
+}
+
+void MainWindow::initslots() 
 {
-    // Find the image
-    QString FileInstruction;
-    FileInstruction = "Image Files(*.dcm *.png *.jpg *.jpeg);;All(*.*)";
-    QDir FileDir;
-    QString imagePath = QFileDialog::getOpenFileName(this, QString(tr("打开图像")), "", FileInstruction);
- 
-    if (imagePath.isEmpty() == true)
-    {
-        cout << "error" << endl;
-        return;
-    }
-    // Show path in the linebox
-    QFileInfo OpenFileInfo;
-    OpenFileInfo = QFileInfo(imagePath);
-    QString OpenFilePath = OpenFileInfo.filePath();
-    ui.lineEdit->setText(OpenFilePath);
-    // Support path in Chinese
-    QByteArray ba = imagePath.toLocal8Bit();
-    const char* imagePath_str = ba.data();
-
-    // Define the corresponding image reader based on the file type
-    if (imagePath.endsWith(".dcm"))
-    {
-        vtkSmartPointer<vtkDICOMImageReader> dicomReader = vtkSmartPointer<vtkDICOMImageReader>::New();
-        dicomReader->SetFileName(imagePath_str);
-  
-        dicomReader->Update();
-        ImageData = dicomReader->GetOutput();
-
-    }
-    else if (imagePath.endsWith(".png"))
-    {
-        vtkSmartPointer<vtkPNGReader> pngReader = vtkSmartPointer<vtkPNGReader>::New();
-        pngReader->SetFileName(imagePath_str);
-        pngReader->Update();
-        ImageData = pngReader->GetOutput();
-    }
-    else if (imagePath.endsWith(".jpg") || imagePath.endsWith(".jpeg"))
-    {
-        vtkSmartPointer<vtkJPEGReader> jpegReader = vtkSmartPointer<vtkJPEGReader>::New();
-        jpegReader->SetFileName(imagePath_str);
-        jpegReader->Update();
-        ImageData = jpegReader->GetOutput();
-    }
-
-    // Load the image data into the VTK rendering window
-    ui.qvtkWidget->renderWindow()->AddRenderer(Renderer);
-    ImageActor->SetInputData(ImageData);
-    Renderer->AddActor(ImageActor);
-    Renderer->ResetCamera();
-    ui.qvtkWidget->renderWindow()->Render();
+    connect(openbutton, SIGNAL(clicked(bool)), this, SLOT(opendicomseries()), Qt::UniqueConnection);
+    connect(openbutton, SIGNAL(clicked(bool)), this, SLOT(opendicomseriesYZ()), Qt::UniqueConnection);
+    connect(openbutton, SIGNAL(clicked(bool)), this, SLOT(opendicomseriesXZ()), Qt::UniqueConnection);
+    connect(marchingcubebutton, SIGNAL(clicked(bool)), this, SLOT(marchingcube()));
+    connect(volumebutton, SIGNAL(clicked(bool)), this, SLOT(volumerendering()));
 }
 
